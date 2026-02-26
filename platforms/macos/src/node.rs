@@ -934,12 +934,22 @@ declare_class!(
         }
 
         #[method_id(accessibilityAttributeValue:)]
-        fn accessibility_attribute_value(&self, attr: &NSString) -> Option<Id<NSString>> {
+        fn accessibility_attribute_value(&self, attr: &NSString) -> Option<Id<AnyObject>> {
             self.resolve(|node| {
+                if attr == ns_string!("AXDOMClassList") {
+                    if let Some(class_name) = node.class_name() {
+                        let classes: Vec<Id<NSString>> = class_name
+                            .split_whitespace()
+                            .map(NSString::from_str)
+                            .collect();
+                        return Some(Id::into_super(Id::into_super(NSArray::from_vec(classes))));
+                    }
+                }
+
                 if attr == ns_string!("AXBrailleLabel") && node.has_braille_label() {
-                    return Some(NSString::from_str(node.braille_label().unwrap()))
+                    return Some(Id::into_super(Id::into_super(NSString::from_str(node.braille_label().unwrap()))));
                 } else if attr == ns_string!("AXBrailleRoleDescription") && node.has_braille_role_description() {
-                    return Some(NSString::from_str(node.braille_role_description().unwrap()))
+                    return Some(Id::into_super(Id::into_super(NSString::from_str(node.braille_role_description().unwrap()))));
                 }
 
                 None
