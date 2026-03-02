@@ -764,6 +764,7 @@ impl<'a> Node<'a> {
                 | Role::DocBiblioRef
                 | Role::DocGlossRef
                 | Role::DocNoteRef
+                | Role::RootWebArea
         ) && self.url().is_some()
     }
 

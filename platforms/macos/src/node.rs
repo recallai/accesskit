@@ -937,7 +937,10 @@ declare_class!(
         fn accessibility_attribute_value(&self, attr: &NSString) -> Option<Id<AnyObject>> {
             self.resolve(|node| {
                 if attr == ns_string!("AXDescription") {
-                    return Some(Id::into_super(Id::into_super(NSString::from_str(&node.description().unwrap()))));
+                    if let Some(desc) = node.description() {
+                        return Some(Id::into_super(Id::into_super(NSString::from_str(&desc))));
+                    }
+                    return None;
                 }
                     
                 if attr == ns_string!("AXDOMClassList") {
@@ -967,11 +970,25 @@ declare_class!(
 
         #[method_id(accessibilityAttributeNames)]
         fn attribute_names(&self) -> Id<NSArray<NSString>> {
+            self.resolve(|node| {
+                let wrapper = NodeWrapper(node);
+                if let Some(desc) = wrapper.description() {
+                    let ns_desc = NSString::from_str(&desc);
+                    let _: () = unsafe { objc2::msg_send![self, setAccessibilityLabel: &*ns_desc] };
+                    let _: () = unsafe { objc2::msg_send![self, setAccessibilityHelp: &*ns_desc] };
+                }
+            });
+
             let super_names: Id<NSArray<NSString>> = unsafe {
                 msg_send_id![super(self), accessibilityAttributeNames]
             };
+
             let mut names: Vec<Id<NSString>> = super_names.iter().map(|s| s.copy()).collect();
             names.push(NSString::from_str("AXTest"));
+            let has_description = names.iter().any(|n| n.to_string() == "AXDescription");
+            if !has_description {
+                names.push(NSString::from_str("AXDescription"));
+            }
             NSArray::from_vec(names)
         }
 
@@ -1164,6 +1181,7 @@ declare_class!(
                         || node.has_braille_role_description()
                         || node.class_name().is_some()
                         || node.author_id().is_some()
+                        || node.description().is_some()
                 }
                 if selector == sel!(accessibilityURL) {
                     return node.supports_url();
@@ -1183,6 +1201,7 @@ declare_class!(
                     || selector == sel!(accessibilityIdentifier)
                     || selector == sel!(accessibilityTitle)
                     || selector == sel!(accessibilityLabel)
+                    || selector == sel!(accessibilityHelp)
                     || selector == sel!(accessibilityPlaceholderValue)
                     || selector == sel!(accessibilityValue)
                     || selector == sel!(accessibilityMinValue)
