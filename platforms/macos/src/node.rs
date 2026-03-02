@@ -512,8 +512,8 @@ declare_class!(
             .flatten()
         }
 
-        #[method_id(accessibilityHelp)]
-        fn description(&self) -> Option<Id<NSString>> {
+        #[method_id(accessibilityLabel)]
+        fn ax_description(&self) -> Option<Id<NSString>> {
             self.resolve(|node| {
                 let wrapper = NodeWrapper(node);
                 wrapper.description().map(|description| NSString::from_str(&description))
@@ -936,6 +936,10 @@ declare_class!(
         #[method_id(accessibilityAttributeValue:)]
         fn accessibility_attribute_value(&self, attr: &NSString) -> Option<Id<AnyObject>> {
             self.resolve(|node| {
+                if attr == ns_string!("AXDescription") {
+                    return Some(Id::into_super(Id::into_super(NSString::from_str(&node.description().unwrap()))));
+                }
+                    
                 if attr == ns_string!("AXDOMClassList") {
                     if let Some(class_name) = node.class_name() {
                         let classes: Vec<Id<NSString>> = class_name
@@ -945,7 +949,11 @@ declare_class!(
                         return Some(Id::into_super(Id::into_super(NSArray::from_vec(classes))));
                     }
                 }
-
+                if attr == ns_string!("AXDOMIdentifier") {
+                    if let Some(id) = node.author_id() {
+                        return Some(Id::into_super(Id::into_super(NSString::from_str(id))));
+                    }
+                }
                 if attr == ns_string!("AXBrailleLabel") && node.has_braille_label() {
                     return Some(Id::into_super(Id::into_super(NSString::from_str(node.braille_label().unwrap()))));
                 } else if attr == ns_string!("AXBrailleRoleDescription") && node.has_braille_role_description() {
@@ -955,6 +963,16 @@ declare_class!(
                 None
             })
             .flatten()
+        }
+
+        #[method_id(accessibilityAttributeNames)]
+        fn attribute_names(&self) -> Id<NSArray<NSString>> {
+            let super_names: Id<NSArray<NSString>> = unsafe {
+                msg_send_id![super(self), accessibilityAttributeNames]
+            };
+            let mut names: Vec<Id<NSString>> = super_names.iter().map(|s| s.copy()).collect();
+            names.push(NSString::from_str("AXTest"));
+            NSArray::from_vec(names)
         }
 
         #[method_id(accessibilityRows)]
@@ -1142,7 +1160,10 @@ declare_class!(
                     return node.is_dialog();
                 }
                 if selector == sel!(accessibilityAttributeValue:) {
-                    return node.has_braille_label() || node.has_braille_role_description()
+                    return node.has_braille_label()
+                        || node.has_braille_role_description()
+                        || node.class_name().is_some()
+                        || node.author_id().is_some()
                 }
                 if selector == sel!(accessibilityURL) {
                     return node.supports_url();
@@ -1161,7 +1182,7 @@ declare_class!(
                     || selector == sel!(accessibilityRoleDescription)
                     || selector == sel!(accessibilityIdentifier)
                     || selector == sel!(accessibilityTitle)
-                    || selector == sel!(accessibilityHelp)
+                    || selector == sel!(accessibilityLabel)
                     || selector == sel!(accessibilityPlaceholderValue)
                     || selector == sel!(accessibilityValue)
                     || selector == sel!(accessibilityMinValue)
