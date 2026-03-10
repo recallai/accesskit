@@ -952,6 +952,12 @@ declare_class!(
                         return Some(Id::into_super(Id::into_super(NSArray::from_vec(classes))));
                     }
                 }
+                if attr == ns_string!("AXTitle") {
+                    let wrapper = NodeWrapper(node);
+                    if let Some(title) = wrapper.title() {
+                        return Some(Id::into_super(Id::into_super(NSString::from_str(&title))));
+                    }
+                }
                 if attr == ns_string!("AXDOMIdentifier") {
                     if let Some(id) = node.author_id() {
                         return Some(Id::into_super(Id::into_super(NSString::from_str(id))));
