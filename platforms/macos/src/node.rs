@@ -990,10 +990,10 @@ declare_class!(
             };
 
             let mut names: Vec<Id<NSString>> = super_names.iter().map(|s| s.copy()).collect();
-            names.push(NSString::from_str("AXTest"));
-            let has_description = names.iter().any(|n| n.to_string() == "AXDescription");
-            if !has_description {
-                names.push(NSString::from_str("AXDescription"));
+            for attr_name in ["AXDescription", "AXTitle", "AXDOMClassList", "AXDOMIdentifier"] {
+                if !names.iter().any(|n| n.to_string() == attr_name) {
+                    names.push(NSString::from_str(attr_name));
+                }
             }
             NSArray::from_vec(names)
         }
