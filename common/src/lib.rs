@@ -181,6 +181,7 @@ pub enum Role {
     SectionHeader,
     Slider,
     SpinButton,
+    SplitGroup,
     Splitter,
     Status,
     Strong,
