@@ -144,6 +144,7 @@ fn ns_role(node: &Node) -> &'static NSAccessibilityRole {
             Role::RadioGroup => NSAccessibilityRadioGroupRole,
             Role::Region => NSAccessibilityGroupRole,
             Role::RootWebArea => ns_string!("AXWebArea"),
+            Role::SplitGroup => ns_string!("AXSplitGroup"),
             Role::Ruby => NSAccessibilityGroupRole,
             Role::RubyAnnotation => NSAccessibilityUnknownRole,
             Role::ScrollBar => NSAccessibilityScrollBarRole,
