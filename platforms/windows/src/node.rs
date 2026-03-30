@@ -188,6 +188,7 @@ impl NodeWrapper<'_> {
             Role::Slider => UIA_SliderControlTypeId,
             Role::SpinButton => UIA_SpinnerControlTypeId,
             Role::Splitter => UIA_SeparatorControlTypeId,
+            Role::SplitGroup => UIA_GroupControlTypeId,
             Role::Status => UIA_StatusBarControlTypeId,
             Role::Strong => UIA_TextControlTypeId,
             Role::Suggestion => UIA_GroupControlTypeId,
